@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  memos:
+    image: ghcr.io/rheinmir/memos:latest
+    container_name: memos-server
+    restart: unless-stopped
+    ports:
+      - "5230:5230"
+    volumes:
+      - ./memos-data:/var/opt/memos
+    environment:
+      - MEMOS_DRIVER=sqlite
+      - MEMOS_Log_Level=info
