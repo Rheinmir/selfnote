@@ -1,6 +1,6 @@
 import { LatLng } from "leaflet";
 import { uniqBy } from "lodash-es";
-import { FileIcon, LinkIcon, LoaderIcon, MapPinIcon, Maximize2Icon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
+import { BrushIcon, FileIcon, LinkIcon, LoaderIcon, MapPinIcon, Maximize2Icon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import type { LocalFile } from "@/components/memo-metadata";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Location, MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
-import { LinkMemoDialog, LocationDialog } from "../components";
+import { LinkMemoDialog, LocationDialog, SketchpadDialog } from "../components";
 import { GEOCODING } from "../constants";
 import { useFileUpload, useLinkMemo, useLocation } from "../hooks";
 import { useAbortController } from "../hooks/useAbortController";
@@ -35,6 +35,7 @@ const InsertMenu = observer((props: Props) => {
 
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [sketchpadDialogOpen, setSketchpadDialogOpen] = useState(false);
 
   // Abort controller for canceling geocoding requests
   const { abort: abortGeocoding, abortAndCreate: createGeocodingSignal } = useAbortController();
@@ -157,6 +158,10 @@ const InsertMenu = observer((props: Props) => {
             <MapPinIcon className="w-4 h-4" />
             {t("tooltip.select-location")}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSketchpadDialogOpen(true)}>
+            <BrushIcon className="w-4 h-4" />
+            Sketch
+          </DropdownMenuItem>
           {/* View submenu with Focus Mode */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
@@ -206,6 +211,20 @@ const InsertMenu = observer((props: Props) => {
         onPlaceholderChange={location.setPlaceholder}
         onCancel={handleLocationCancel}
         onConfirm={handleLocationConfirm}
+      />
+
+      <SketchpadDialog
+        open={sketchpadDialogOpen}
+        onOpenChange={setSketchpadDialogOpen}
+        onSave={(blob) => {
+            if (context.addLocalFiles) {
+                const file = new File([blob], `sketch-${Date.now()}.png`, { type: "image/png" });
+                context.addLocalFiles([{
+                    file,
+                    previewUrl: URL.createObjectURL(file), 
+                }]);
+            }
+        }}
       />
     </>
   );
