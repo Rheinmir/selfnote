@@ -60,11 +60,10 @@ const AttachmentCard = ({ item, mode, onRemove, onClick, className, showThumbnai
       return (
         <img
           className={cn("cursor-pointer h-full w-auto rounded-lg border border-border/60 object-contain transition-colors", className)}
-          src={thumbnailUrl}
+          src={sourceUrl}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            // Fallback to source URL if thumbnail fails
-            if (target.src.includes("?thumbnail=true")) {
+            if (target.src !== sourceUrl) {
               target.src = sourceUrl;
             }
           }}

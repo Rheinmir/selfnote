@@ -30,7 +30,7 @@ const (
 	// ThumbnailCacheFolder is the folder name where the thumbnail images are stored.
 	ThumbnailCacheFolder = ".thumbnail_cache"
 	// thumbnailMaxSize is the maximum size in pixels for the largest dimension of the thumbnail image.
-	thumbnailMaxSize = 600
+	thumbnailMaxSize = 3840
 )
 
 var SupportedThumbnailMimeTypes = []string{

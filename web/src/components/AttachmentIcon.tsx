@@ -48,15 +48,10 @@ const AttachmentIcon = (props: Props) => {
         <SquareDiv className={cn(className, "flex items-center justify-center overflow-clip")}>
           <img
             className="min-w-full min-h-full object-cover"
-            src={getAttachmentThumbnailUrl(attachment)}
+            src={getAttachmentUrl(attachment)}
             onClick={handleImageClick}
             onError={(e) => {
-              // Fallback to original image if thumbnail fails
-              const target = e.target as HTMLImageElement;
-              if (target.src.includes("?thumbnail=true")) {
-                console.warn("Thumbnail failed, falling back to original image:", attachmentUrl);
-                target.src = attachmentUrl;
-              }
+              console.warn("Failed to load image:", attachmentUrl);
             }}
             decoding="async"
             loading="lazy"
