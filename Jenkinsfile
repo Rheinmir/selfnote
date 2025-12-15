@@ -68,9 +68,29 @@ pipeline {
                      // Ensure we have the latest image
                      sh "docker pull ${REGISTRY}/${IMAGE_REPO}:latest"
 
-                     // Deploy using docker compose (v2) to avoid architecture mismatch issues with legacy docker-compose binary
-                     // This handles stopping, recreating, and starting the container if the image changed
-                     sh "docker compose up -d"
+                     // Deploy using plain docker run since the agent container environment 
+                     // doesn't support docker compose plugin or binary correctly.
+                     
+                     // Stop and remove existing container
+                     sh "docker stop ${CONTAINER_NAME} || true"
+                     sh "docker rm ${CONTAINER_NAME} || true"
+                     
+                     // Get current directory for volume mapping
+                     def workspace = sh(script: "pwd", returnStdout: true).trim()
+
+                     // Run the container
+                     // Note: We use the volume mapping relative to the current workspace. 
+                     // If running in a containerized agent, ensure the host path maps correctly.
+                     sh """
+                     docker run -d \\
+                       --name ${CONTAINER_NAME} \\
+                       --restart unless-stopped \\
+                       -p 5230:5230 \\
+                       -v "${workspace}/memos-data:/var/opt/memos" \\
+                       -e MEMOS_DRIVER=sqlite \\
+                       -e MEMOS_Log_Level=info \\
+                       ${REGISTRY}/${IMAGE_REPO}:latest
+                     """
                      
                      // Cleanup unused images to save space
                      sh "docker image prune -f || true"
