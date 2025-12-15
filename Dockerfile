@@ -7,7 +7,7 @@ RUN npm install -g pnpm
 
 # Copy frontend configuration files
 COPY web/package.json web/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source code and build
 COPY web .
