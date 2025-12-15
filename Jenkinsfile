@@ -36,16 +36,28 @@ pipeline {
                     
                     echo "Checking remote image: ${fullImageName}"
                     
-                    // Try to pull latest image to cache layers
-                    sh "docker pull ${latestImageName} || true"
+                    // Try to pull the image first to see if it exists remotely
+                    // We use '|| true' so the pipeline doesn't fail if pull fails (image doesn't exist)
+                    def pullExitCode = sh(script: "docker pull ${fullImageName}", returnStatus: true)
                     
-                    echo "Building image..."
-                    sh "docker build -t ${fullImageName} ."
-                    sh "docker tag ${fullImageName} ${latestImageName}"
+                    if (pullExitCode == 0) {
+                         echo "Image ${fullImageName} exists remotely. Skipping build."
+                         // Ensure we tag this existing image as latest so Deploy stage works if it relies on latest
+                         sh "docker tag ${fullImageName} ${latestImageName}"
+                         sh "docker push ${latestImageName}"
+                    } else {
+                        echo "Image not found remotely. Building..."
                         
-                    echo "Pushing images..."
-                    sh "docker push ${fullImageName}"
-                    sh "docker push ${latestImageName}"
+                        // Try to pull latest image to cache layers for faster build
+                        sh "docker pull ${latestImageName} || true"
+                        
+                        sh "docker build -t ${fullImageName} ."
+                        sh "docker tag ${fullImageName} ${latestImageName}"
+                        
+                        echo "Pushing images..."
+                        sh "docker push ${fullImageName}"
+                        sh "docker push ${latestImageName}"
+                    }
                 }
             }
         }
@@ -56,9 +68,9 @@ pipeline {
                      // Ensure we have the latest image
                      sh "docker pull ${REGISTRY}/${IMAGE_REPO}:latest"
 
-                     // Deploy using docker-compose
+                     // Deploy using docker compose (v2) to avoid architecture mismatch issues with legacy docker-compose binary
                      // This handles stopping, recreating, and starting the container if the image changed
-                     sh "docker-compose up -d"
+                     sh "docker compose up -d"
                      
                      // Cleanup unused images to save space
                      sh "docker image prune -f || true"
