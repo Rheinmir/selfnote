@@ -75,18 +75,16 @@ pipeline {
                      sh "docker stop ${CONTAINER_NAME} || true"
                      sh "docker rm ${CONTAINER_NAME} || true"
                      
-                     // Get current directory for volume mapping
-                     def workspace = sh(script: "pwd", returnStdout: true).trim()
-
                      // Run the container
-                     // Note: We use the volume mapping relative to the current workspace. 
-                     // If running in a containerized agent, ensure the host path maps correctly.
+                     // We use a Docker Named Volume ('memos-data') instead of a host bind mount.
+                     // This fixes the "mounts denied" error because the Jenkins agent's internal path 
+                     // (/home/jenkins/workspace/...) does not exist on the host machine where the Docker daemon runs.
                      sh """
                      docker run -d \\
                        --name ${CONTAINER_NAME} \\
                        --restart unless-stopped \\
                        -p 5230:5230 \\
-                       -v "${workspace}/memos-data:/var/opt/memos" \\
+                       -v memos-data:/var/opt/memos \\
                        -e MEMOS_DRIVER=sqlite \\
                        -e MEMOS_Log_Level=info \\
                        ${REGISTRY}/${IMAGE_REPO}:latest
